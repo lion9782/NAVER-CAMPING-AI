@@ -8,6 +8,8 @@
     <title>캠핑GPT - AI 캠핑 전문가</title>
     <link rel="stylesheet" href="/resources/css/style.css" />
 <!--     <link href="https://cdnjs.cloudflare.org/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"> -->
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 </head>
 <body>
     <!-- 로그인 화면 -->

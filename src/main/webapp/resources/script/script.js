@@ -221,12 +221,38 @@ function sendSuggestedPrompt(message) {
     sendMessage();
 }
 
+function getCurrentDateTimeString() {
+    const now = new Date();
+
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // 0-based
+    const day = String(now.getDate()).padStart(2, '0');
+
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+
 // 메시지 전송
 function sendMessage() {
     const input = document.getElementById('messageInput');
     const message = input.value.trim();
+    const savedUser = localStorage.getItem('campingGPTUser');
+    const currentTime = getCurrentDateTimeString(); 
 
     if (!message) return;
+    
+    let userId = null;
+    try {
+        const parsedUser = JSON.parse(savedUser);
+        userId = parsedUser.id;
+    } catch (e) {
+        console.error("사용자 정보 파싱 실패", e);
+        return;
+    }
 
     // 사용자 메시지 추가
     addMessage(message, 'user');
@@ -239,16 +265,37 @@ function sendMessage() {
     if (suggestedPrompts) {
         suggestedPrompts.style.display = 'none';
     }
+    
+    $.ajax({
+        url: '/ChatLibrary/sendMessage',
+        method: 'POST',
+        dataType :  "JSON",
+        data: { message: message,
+        	savedUser : userId,
+        	currentTime : currentTime},
+        
+        success: function (response) {     	
+        	hideTypingIndicator();
+        	alert(response.msg);
 
-    // AI 응답 대기 표시
-    showTypingIndicator();
+            // AI 응답 대기 표시
+            showTypingIndicator();
 
-    // AI 응답 시뮬레이션
-    setTimeout(() => {
-        hideTypingIndicator();
-        const aiResponse = generateAIResponse(message);
-        addMessage(aiResponse, 'ai');
-    }, 1500 + Math.random() * 1000);
+            // AI 응답 시뮬레이션
+            setTimeout(() => {
+                hideTypingIndicator();
+                const aiResponse = generateAIResponse(message);
+                addMessage(aiResponse, 'ai');
+            }, 1500 + Math.random() * 1000);
+//            addMessage(response.reply, 'ai'); // Spring에서 보낸 응답 사용
+        },
+        error: function (xhr, status, error) {
+            hideTypingIndicator();
+//            console.error('에러 발생:', error);
+            alert("실페");
+//            addMessage("AI 응답 중 오류가 발생했습니다.", 'ai');
+        }
+    });
 }
 
 // 메시지 추가

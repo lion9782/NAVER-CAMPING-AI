@@ -22,6 +22,10 @@
 	</beans:bean>
 	
 	<context:component-scan base-package="com.ncloud.ai" />
+	<context:component-scan base-package="com.ncloud.domain" />
+	<context:component-scan base-package="com.ncloud.service" />
+	<context:component-scan base-package="com.ncloud.dao" />
+	<context:component-scan base-package="com.ncloud.common" />
 	
 	
 	

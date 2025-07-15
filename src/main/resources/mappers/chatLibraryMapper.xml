@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="chatLibrary">
+
+	<!-- 채팅방, 채팅내용 insert -->
+	<insert id="insertChatLibrary" parameterType="library">
+	   INSERT INTO user_chat_library(user_id, create_at) VALUES(#{user_id}, #{create_at}) 
+	</insert>
+</mapper>

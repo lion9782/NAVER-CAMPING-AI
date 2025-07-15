@@ -4,4 +4,7 @@
   "http://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
   
+	<typeAliases>
+		<typeAlias alias="library" type="com.ncloud.domain.ChatLibraryVO" />	
+	</typeAliases>
 </configuration>
