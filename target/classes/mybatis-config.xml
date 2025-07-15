@@ -6,5 +6,6 @@
   
 	<typeAliases>
 		<typeAlias alias="library" type="com.ncloud.domain.ChatLibraryVO" />	
+		<typeAlias alias="history" type="com.ncloud.domain.UserChatHistoryVO" />	
 	</typeAliases>
 </configuration>
