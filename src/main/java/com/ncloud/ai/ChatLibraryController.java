@@ -34,6 +34,13 @@ public class ChatLibraryController {
 	@Inject
 	ChatHistoryService hservice;
 	
+	
+	@RequestMapping(value = "/chat")
+	public String chat() throws Exception{
+		
+		return "";
+	}
+	
 	@RequestMapping(value = "/sendMessage")
 	public void insertChatLibrary(@ModelAttribute("ChatLibraryVO") ChatLibraryVO vo ,HttpServletResponse response, HttpServletRequest request) throws Exception {
 		String user_id = request.getParameter("savedUser");
