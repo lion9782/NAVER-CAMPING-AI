@@ -1,307 +1,3 @@
-// 전역 변수
-let currentUser = null;
-let chatHistory = [];
-let currentChatId = null;
-let chatRooms = [];
-let isFirstMessage = true;
-
-// DOM 로드 완료 후 실행
-document.addEventListener('DOMContentLoaded', function() {
-    initializeApp();
-});
-
-// 앱 초기화
-function initializeApp() {
-    // 저장된 사용자 정보 확인
-    const savedUser = localStorage.getItem('campingGPTUser');
-    if (savedUser) {
-        currentUser = JSON.parse(savedUser);
-        showChatApp();
-    } else {
-        showAuthScreen();
-//    	showChatApp();
-    }
-}
-
-// 인증 화면 표시/숨김
-function showAuthScreen() {
-    document.getElementById('authScreen').style.display = 'flex';
-    document.getElementById('chatApp').style.display = 'none';
-}
-
-function showChatApp() {
-    document.getElementById('authScreen').style.display = 'none';
-    document.getElementById('chatApp').style.display = 'flex';
-
-    if (currentUser) {
-        document.getElementById('userName').textContent = currentUser.name;
-        document.getElementById('headerUserName').textContent = currentUser.name;
-    }
-
-    loadChatHistory();
-}
-
-// 로그인/회원가입 폼 전환
-function showLogin() {
-    document.getElementById('loginForm').classList.add('active');
-    document.getElementById('signupForm').classList.remove('active');
-}
-
-function showSignup() {
-    document.getElementById('signupForm').classList.add('active');
-    document.getElementById('loginForm').classList.remove('active');
-}
-
-// 로그인 처리
-function handleLogin(event) {
-    event.preventDefault();
-
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-
-    if (!email || !password) {
-        alert('이메일과 비밀번호를 입력해주세요.');
-        return;
-    }
-
-    // 임시 로그인 (실제로는 서버 인증 필요)
-    currentUser = {
-        id: Date.now(),
-        name: email.split('@')[0],
-        email: email
-    };
-
-    localStorage.setItem('campingGPTUser', JSON.stringify(currentUser));
-    showChatApp();
-}
-
-// 회원가입 처리
-function handleSignup(event) {
-    event.preventDefault();
-
-    const name = document.getElementById('signupName').value;
-    const email = document.getElementById('signupEmail').value;
-    const password = document.getElementById('signupPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-
-    if (!name || !email || !password || !confirmPassword) {
-        alert('모든 필드를 입력해주세요.');
-        return;
-    }
-
-    if (password !== confirmPassword) {
-        alert('비밀번호가 일치하지 않습니다.');
-        return;
-    }
-
-    if (password.length < 6) {
-        alert('비밀번호는 6자 이상이어야 합니다.');
-        return;
-    }
-
-    // 임시 회원가입 (실제로는 서버에 저장 필요)
-    currentUser = {
-        id: Date.now(),
-        name: name,
-        email: email
-    };
-
-    localStorage.setItem('campingGPTUser', JSON.stringify(currentUser));
-    alert('회원가입이 완료되었습니다!');
-    showChatApp();
-}
-
-// 사용자 메뉴 토글
-function toggleUserMenu() {
-    const userMenu = document.querySelector('.user-menu');
-    userMenu.classList.toggle('open');
-}
-
-// 로그아웃
-function logout() {
-    if (confirm('정말 로그아웃 하시겠습니까?')) {
-        currentUser = null;
-        localStorage.removeItem('campingGPTUser');
-        localStorage.removeItem('campingGPTHistory');
-        localStorage.removeItem('campingGPTRooms');
-//        showAuthScreen();
-        clearChat();
-        showChatApp();
-        
-        // 사용자 메뉴 닫기
-        const userMenu = document.querySelector('.user-menu');
-        if (userMenu) {
-            userMenu.classList.remove('open');
-        }              
-        
-        alert('로그아웃되었습니다.');
-    }
-}
-
-// 새 채팅 시작
-function startNewChat() {
-//    currentChatId = Date.now().toString();
-    currentChatId = Math.floor(Math.random() * 2147483647).toString();
-    isFirstMessage = true;
-    clearChat();
-    showWelcomeMessage();
-    
-    // 모든 채팅방 비활성화
-    document.querySelectorAll('.chat-item').forEach(item => {
-        item.classList.remove('active');
-    });
-}
-
-//새 채팅방 생성
-function createNewChatRoom(firstMessage) {
-    const chatId = Math.floor(Math.random() * 2147483647).toString();
-    currentChatId = chatId;
-
-    // 채팅방 제목 생성 (첫 메시지의 처음 20글자)
-    const title = firstMessage.length > 20 ? 
-        firstMessage.substring(0, 20) + '...' : firstMessage;
-
-    // 새 채팅방 객체 생성
-    const newChatRoom = {
-        id: chatId,
-        title: title,
-        preview: firstMessage,
-        timestamp: new Date(),
-        icon: getChatIcon(firstMessage)
-    };
-
-    // 채팅방 배열에 추가 (맨 앞에)
-    chatRooms.unshift(newChatRoom);
-
-    // 사이드바에 채팅방 추가
-    addChatRoomToSidebar(newChatRoom);
-
-    // 로컬 스토리지에 저장
-    saveChatRooms();
-
-    // 첫 번째 메시지 플래그를 false로 설정
-    isFirstMessage = false;
-
-    return chatId;
-}
-
-// 사이드바에 채팅방 추가
-function addChatRoomToSidebar(chatRoom) {
-    const chatHistory = document.querySelector('.chat-history');
-    
-    // 새 채팅방 HTML 생성
-    const chatItemHTML = `
-        <div class="chat-item active" onclick="selectChat(this)" data-chat-id="${chatRoom.id}">
-            <i class="${chatRoom.icon}"></i>
-            <div class="chat-info">
-                <div class="chat-title">${chatRoom.title}</div>
-                <div class="chat-preview">${chatRoom.preview}</div>
-            </div>
-        </div>
-    `;
-    
-    // 모든 기존 채팅방 비활성화
-    document.querySelectorAll('.chat-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    
-    // 새 채팅방을 맨 위에 추가
-    chatHistory.insertAdjacentHTML('afterbegin', chatItemHTML);
-}
-
-// 채팅 아이콘 결정
-function getChatIcon(message) {
-    const lowerMessage = message.toLowerCase();
-    
-    if (lowerMessage.includes('준비물') || lowerMessage.includes('장비')) {
-        return 'fas fa-backpack';
-    } else if (lowerMessage.includes('캠핑장') || lowerMessage.includes('추천')) {
-        return 'fas fa-map-marked-alt';
-    } else if (lowerMessage.includes('요리') || lowerMessage.includes('레시피') || lowerMessage.includes('음식')) {
-        return 'fas fa-utensils';
-    } else if (lowerMessage.includes('안전') || lowerMessage.includes('주의')) {
-        return 'fas fa-shield-alt';
-    } else if (lowerMessage.includes('텐트')) {
-        return 'fas fa-campground';
-    } else if (lowerMessage.includes('불') || lowerMessage.includes('화재')) {
-        return 'fas fa-fire';
-    } else {
-        return 'fas fa-comments';
-    }
-}
-
-// 채팅방 저장
-function saveChatRooms() {
-    localStorage.setItem('campingGPTRooms', JSON.stringify(chatRooms));
-}
-
-// 채팅방 로드
-function loadChatRooms() {
-    const savedRooms = localStorage.getItem('campingGPTRooms');
-    if (savedRooms) {
-        chatRooms = JSON.parse(savedRooms);
-        renderChatRooms();
-    }
-}
-
-// 채팅방 렌더링
-function renderChatRooms() {
-    const chatHistory = document.querySelector('.chat-history');
-    chatHistory.innerHTML = '';
-    
-    chatRooms.forEach((room, index) => {
-        const isActive = index === 0 ? 'active' : '';
-        const chatItemHTML = `
-            <div class="chat-item ${isActive}" onclick="selectChat(this)" data-chat-id="${room.id}">
-                <i class="${room.icon}"></i>
-                <div class="chat-info">
-                    <div class="chat-title">${room.title}</div>
-                    <div class="chat-preview">${room.preview}</div>
-                </div>
-            </div>
-        `;
-        chatHistory.insertAdjacentHTML('beforeend', chatItemHTML);
-    });
-}
-
-// 채팅 기록 로드
-function loadChatHistory() {
-	const savedUser = localStorage.getItem('campingGPTUser');
-    const savedHistory = localStorage.getItem('campingGPTHistory');
-    if (savedHistory) {
-        chatHistory = JSON.parse(savedHistory);
-    }
-
-    // 채팅방 로드
-    loadChatRooms();
-
-    // 채팅방이 없으면 새 채팅 시작
-    if (chatRooms.length === 0) {
-        startNewChat();
-    }
-}
-
-// 채팅 선택
-function selectChat(element) {
-    // 이전 선택 제거
-    document.querySelectorAll('.chat-item').forEach(item => {
-        item.classList.remove('active');
-    });
-
-    // 현재 선택 표시
-    element.classList.add('active');
-
-    // 채팅 ID 가져오기
-    const chatId = element.getAttribute('data-chat-id');
-    currentChatId = chatId;
-
-    // 기존 채팅방을 선택했으므로 첫 번째 메시지가 아님
-    isFirstMessage = false;
-
-    // 해당 채팅 내용 로드 (임시로 새 채팅으로 처리)
-    clearChat();
-    showWelcomeMessage();
-}
 
 // 채팅 화면 초기화
 function clearChat() {
@@ -356,6 +52,7 @@ function sendSuggestedPrompt(message) {
     sendMessage();
 }
 
+// 현재 날짜 시간 문자열 반환
 function getCurrentDateTimeString() {
     const now = new Date();
 
@@ -370,19 +67,6 @@ function getCurrentDateTimeString() {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-//현재 선택된 채팅방 ID 가져오기
-function getCurrentChatRoomId() {
-    return currentChatId;
-}
-
-//새로 생성된 채팅방 ID 가져오기 (마지막으로 생성된 것)
-function getLastCreatedChatRoomId() {
-    const activeChatItem = document.querySelector('.chat-item.active');
-    if (activeChatItem) {
-        return activeChatItem.getAttribute('data-chat-id');
-    }
-    return currentChatId;
-}
 // 메시지 전송
 function sendMessage() {
     const input = document.getElementById('messageInput');
@@ -391,10 +75,11 @@ function sendMessage() {
     const currentTime = getCurrentDateTimeString(); 
     
     if(savedUser == null){
-    	sendMessageGuset();
-    	return;
+        sendMessageGuest();
+        return;
     }
- // 첫 번째 메시지인 경우에만 새 채팅방 생성
+    
+    // 첫 번째 메시지인 경우에만 새 채팅방 생성
     let newChatRoomId = null;
     if (isFirstMessage) {
         newChatRoomId = createNewChatRoom(message);
@@ -429,16 +114,18 @@ function sendMessage() {
     $.ajax({
         url: '/ChatLibrary/sendMessage',
         method: 'POST',
-        dataType :  "JSON",
-        data: { message: message,
-        	savedUser : userId,
-        	currentTime : currentTime,
-        	selectedChatRoomId : selectedChatRoomId,
-        	newChatRoomId : newChatRoomId},
+        dataType: "JSON",
+        data: { 
+            message: message,
+            savedUser: userId,
+            currentTime: currentTime,
+            selectedChatRoomId: selectedChatRoomId,
+            newChatRoomId: newChatRoomId
+        },
         
         success: function (response) {     	
-        	hideTypingIndicator();
-        	alert(response.msg);
+            hideTypingIndicator();
+            alert(response.msg);
 
             // AI 응답 대기 표시
             showTypingIndicator();
@@ -447,26 +134,22 @@ function sendMessage() {
             setTimeout(() => {
                 hideTypingIndicator();
                 const aiResponse = generateAIResponse(message);                
-//                addMessage(aiResponse, 'ai');
                 sendAiMessage(userId, selectedChatRoomId, newChatRoomId, aiResponse)
             }, 1500 + Math.random() * 1000);
-//            addMessage(response.reply, 'ai'); // Spring에서 보낸 응답 사용
         },
         error: function (xhr, status, error) {
             hideTypingIndicator();
-//            console.error('에러 발생:', error);
-            alert("실페");
-//            addMessage("AI 응답 중 오류가 발생했습니다.", 'ai');
+            alert("실패");
         }
     });
-
 }
 
-//메시지 전송
-function sendMessageGuset() {
-	const input = document.getElementById('messageInput');
-	const message = input.value.trim();
-	// 첫 번째 메시지인 경우에만 새 채팅방 생성
+// 게스트 메시지 전송
+function sendMessageGuest() {
+    const input = document.getElementById('messageInput');
+    const message = input.value.trim();
+    
+    // 첫 번째 메시지인 경우에만 새 채팅방 생성
     let newChatRoomId = null;
     if (isFirstMessage) {
         newChatRoomId = createNewChatRoom(message);
@@ -477,7 +160,6 @@ function sendMessageGuset() {
 
     if (!message) return;
 
-   
     // 사용자 메시지 추가
     addMessage(message, 'user');
 
@@ -501,22 +183,24 @@ function sendMessageGuset() {
     }, 1500 + Math.random() * 1000);
 }
 
-
+// AI 메시지 전송
 function sendAiMessage(userId, selectedChatRoomId, newChatRoomId, aiResponse){
-	const currentTime = getCurrentDateTimeString(); 
-	$.ajax({
+    const currentTime = getCurrentDateTimeString(); 
+    $.ajax({
         url: '/ChatHistory/sendAiMessage',
         method: 'POST',
-        dataType :  "JSON",
-        data: { userId: userId,
-        	selectedChatRoomId : selectedChatRoomId,
-        	newChatRoomId : newChatRoomId,
-        	aiResponse : aiResponse,
-        	currentTime : currentTime},
+        dataType: "JSON",
+        data: { 
+            userId: userId,
+            selectedChatRoomId: selectedChatRoomId,
+            newChatRoomId: newChatRoomId,
+            aiResponse: aiResponse,
+            currentTime: currentTime
+        },
         
         success: function (response) {     	
-        	alert(response.msg);
-        	addMessage(aiResponse, 'ai');
+            alert(response.msg);
+            addMessage(aiResponse, 'ai');
         },
         error: function (xhr, status, error) {
             hideTypingIndicator();
@@ -740,11 +424,6 @@ function handleEnter(event) {
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
     sidebar.classList.toggle('open');
-}
-
-// 채팅 기록 저장
-function saveChatHistory() {
-    localStorage.setItem('campingGPTHistory', JSON.stringify(chatHistory));
 }
 
 // 페이지 새로고침 시 경고

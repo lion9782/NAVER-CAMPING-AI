@@ -1,5 +1,7 @@
 package com.ncloud.dao;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
 import org.apache.ibatis.session.SqlSession;
@@ -20,9 +22,8 @@ public class ChatLibraryDaoImpl implements ChatLibraryDao{
 	}
 	
 	@Override
-	public int insertChatHistory(UserChatHistoryVO vo) throws Exception{
-		return sql.insert("chatLibrary.insertChatHistory", vo);
+	public List<ChatLibraryVO> selectChatRoomById(ChatLibraryVO vo) {
+	    return sql.selectList("chatLibrary.selectChatRoomById", vo);
 	}
 	
-
 }

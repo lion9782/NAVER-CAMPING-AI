@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="chatHistory">
+
+	<!-- 채팅내용 insert -->	
+	<insert id="insertChatHistory" parameterType="history">
+	   INSERT INTO user_chat_history(user_chat_library_id, user_id, ask_value, ask_create_at) VALUES(#{user_chat_library_id}, #{user_id}, #{ask_value}, now()) 
+	</insert>
+	
+	<!-- ai응답 update -->	
+	<update id="updateAimessage" parameterType="history">
+	    UPDATE user_chat_history 
+	    	SET 
+	    	answer_value = #{answer_value}
+	    	, answer_create_at = #{answer_create_at}
+	    WHERE 
+	    	user_id = #{user_id} 
+	    	AND user_chat_library_id = #{user_chat_library_id}
+	</update>
+	
+</mapper>

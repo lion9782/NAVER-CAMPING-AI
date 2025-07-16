@@ -9,7 +9,8 @@
 	   INSERT INTO user_chat_library(user_chat_library_id, user_id, create_at) VALUES(#{user_chat_library_id}, #{user_id}, #{create_at}) 
 	</insert>
 	
-	<insert id="insertChatHistory" parameterType="library">
-	   INSERT INTO user_chat_history(user_chat_library_id, user_id, ask_value, ask_create_at) VALUES(#{user_chat_library_id}, #{user_id}, #{ask_value}, now()) 
-	</insert>
+	<!-- id값에 따른 채팅방 select -->
+	<select id="selectChatRoomById" parameterType="String" resultType="library">
+		SELECT * FROM user_chat_library WHERE user_id = #{user_id} ORDER BY create_at DESC
+	</select>
 </mapper>
