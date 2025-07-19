@@ -23,8 +23,9 @@ public class ChatLibraryServiceImpl implements ChatLibraryService{
 	}
 	
 	@Override
-	public List<ChatLibraryVO> selectChatRoomById(ChatLibraryVO vo) throws Exception {
-		return dao.selectChatRoomById(vo);
+	public List<ChatLibraryVO> selectChatRoomById(String userId) throws Exception {
+	    return dao.selectChatRoomById(userId);
 	}
+	
 	
 }

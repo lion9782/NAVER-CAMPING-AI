@@ -9,7 +9,8 @@ public interface ChatLibraryDao {
 
 	public int insertChatLibrary(ChatLibraryVO vo) throws Exception;
 	
-	public List<ChatLibraryVO> selectChatRoomById(ChatLibraryVO vo) throws Exception;
+	public List<ChatLibraryVO> selectChatRoomById(String userId) throws Exception;
+	
 	
 	
 }

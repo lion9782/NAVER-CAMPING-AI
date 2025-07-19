@@ -1,5 +1,7 @@
 package com.ncloud.service;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,11 @@ public class ChatHistoryServiceImpl implements ChatHistoryService{
 	@Override
 	public int updateAimessage(UserChatHistoryVO vo) throws Exception{
 		return dao.updateAimessage(vo);
+	}
+	
+	@Override
+	public List<UserChatHistoryVO> getChatMessagesByRoomId(int chatRoomId) throws Exception {
+	    return dao.getChatMessagesByRoomId(chatRoomId);
 	}
 	
 }

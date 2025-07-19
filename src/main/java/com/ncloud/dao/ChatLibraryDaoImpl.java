@@ -22,8 +22,9 @@ public class ChatLibraryDaoImpl implements ChatLibraryDao{
 	}
 	
 	@Override
-	public List<ChatLibraryVO> selectChatRoomById(ChatLibraryVO vo) {
-	    return sql.selectList("chatLibrary.selectChatRoomById", vo);
+	public List<ChatLibraryVO> selectChatRoomById(String userId) {
+	    return sql.selectList("chatLibrary.selectChatRoomById", userId);
 	}
+
 	
 }

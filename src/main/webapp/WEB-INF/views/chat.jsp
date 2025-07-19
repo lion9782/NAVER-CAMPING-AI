@@ -6,44 +6,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>캠핑GPT - AI 캠핑 전문가</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>캠핑AI - 채팅</title>
     <link rel="stylesheet" href="/resources/css/style.css" />
-	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <!-- 메인 채팅 앱 -->
-    <div id="chatApp" class="chat-app active">
+    <div id="chatApp" class="chat-app">
         <!-- 사이드바 -->
         <div class="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
                     <i class="fas fa-campground"></i>
-                    <span>캠핑GPT</span>
+                    <span>캠핑AI</span>
                 </div>
                 <button class="new-chat-btn" onclick="startNewChat()">
                     <i class="fas fa-plus"></i>
                     새 대화
                 </button>
             </div>
-            <div class="chat-history">
-                
+
+            <div class="chat-history" id="chatHistory">
+                <!-- 동적으로 생성됨 -->
             </div>
+
             <div class="sidebar-footer">
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="user-details">
-                        <div class="user-name" id="userName"></div>
-                        <div class="user-status"></div>
-                    </div>
+                <div class="user-info" id="userInfo">
+                    <!-- 동적으로 생성됨 -->
                 </div>
-                <button class="logout-btn" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i>
-                </button>
             </div>
         </div>
+
         <!-- 메인 채팅 영역 -->
         <div class="main-content">
             <div class="chat-header">
@@ -53,30 +47,12 @@
                         <i class="fas fa-circle online"></i>
                         온라인
                     </div>
-                    <div class="user-menu">
-                        <button class="user-menu-btn" onclick="toggleUserMenu()">
-                            <i class="fas fa-user-circle"></i>
-                            <span id="headerUserName">GUEST</span>
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
-                        <div class="user-dropdown" id="userDropdown">
-                            <div class="dropdown-item">
-                                <i class="fas fa-user"></i>
-                                <span>내 프로필</span>
-                            </div>
-                            <div class="dropdown-item">
-                                <i class="fas fa-cog"></i>
-                                <span>설정</span>
-                            </div>
-                            <div class="dropdown-divider"></div>
-                            <div class="dropdown-item logout-item" onclick="logout()">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span>로그아웃</span>
-                            </div>
-                        </div>
+                    <div class="user-menu" id="headerUserMenu">
+                        <!-- 동적으로 생성됨 -->
                     </div>
                 </div>
             </div>
+
             <div class="chat-messages" id="chatMessages">
                 <!-- 환영 메시지 -->
                 <div class="message ai-message">
@@ -91,8 +67,9 @@
                         <div class="message-time">방금 전</div>
                     </div>
                 </div>
+
                 <!-- 제안 프롬프트 -->
-                <div class="suggested-prompts">
+                <div class="suggested-prompts" id="suggestedPrompts">
                     <div class="prompt-card" onclick="sendSuggestedPrompt('초보자를 위한 캠핑 준비물 리스트를 알려주세요')">
                         <i class="fas fa-backpack"></i>
                         <span>초보자 캠핑 준비물</span>
@@ -111,9 +88,10 @@
                     </div>
                 </div>
             </div>
+
             <div class="chat-input-container">
                 <div class="chat-input">
-                    <input type="text" id="messageInput" placeholder="캠핑에 대해 무엇이든 물어보세요..." onkeypress="handleEnter(event)">
+                    <input type="text" id="messageInput" placeholder="캠핑에 대해 무엇이든 물어보세요..." onkeypress="handleKeyPress(event)">
                     <button onclick="sendMessage()" class="send-btn">
                         <i class="fas fa-paper-plane"></i>
                     </button>
@@ -125,7 +103,10 @@
             </div>
         </div>
     </div>
+
     <script src="/resources/script/chatroom.js"></script>
     <script src="/resources/script/chat.js"></script>
+    <script src="/resources/script/auth.js"></script>
+    <script src="/resources/script/main.js"></script>
 </body>
 </html>

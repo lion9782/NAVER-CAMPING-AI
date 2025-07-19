@@ -7,5 +7,7 @@
 	<typeAliases>
 		<typeAlias alias="library" type="com.ncloud.domain.ChatLibraryVO" />	
 		<typeAlias alias="history" type="com.ncloud.domain.UserChatHistoryVO" />	
+		<typeAlias alias="login" type="com.ncloud.domain.LoginVO" />	
+		<typeAlias alias="mbvo" type="com.ncloud.domain.MBVO" />	
 	</typeAliases>
 </configuration>

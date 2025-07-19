@@ -1,114 +1,228 @@
 
-// 채팅 화면 초기화
-function clearChat() {
-    const chatMessages = document.getElementById('chatMessages');
-    chatMessages.innerHTML = '';
+// 채팅 관련 전역 변수
+let chatHistory = [];
+
+// 로컬 채팅 히스토리 로드 (로그인하지 않은 사용자)
+function loadLocalChatHistory() {
+    const savedHistory = localStorage.getItem('campingGPTTempHistory');
+    if (savedHistory) {
+        chatHistory = JSON.parse(savedHistory);
+        displayLocalChatHistory();
+    }
+
+    // 첫 번째 채팅이 없으면 새 채팅 시작
+    if (chatHistory.length === 0) {
+        startNewChat();
+    }
 }
 
-// 환영 메시지 표시
-function showWelcomeMessage() {
-    const chatMessages = document.getElementById('chatMessages');
+// 로컬 채팅 히스토리 표시
+function displayLocalChatHistory() {
+    clearChat();
+    showWelcomeMessage();
 
-    const welcomeHTML = `
-        <div class="message ai-message">
-            <div class="message-avatar">
-                <i class="fas fa-robot"></i>
-            </div>
-            <div class="message-content">
-                <div class="message-text">
-                    안녕하세요! 저는 캠핑 전문 AI입니다. 🏕️<br>
-                    캠핑에 관한 모든 질문에 답해드릴게요. 궁금한 것이 있으시면 언제든 물어보세요!
-                </div>
-                <div class="message-time">${getCurrentTime()}</div>
-            </div>
-        </div>
-
-        <div class="suggested-prompts">
-            <div class="prompt-card" onclick="sendSuggestedPrompt('초보자를 위한 캠핑 준비물 리스트를 알려주세요')">
-                <i class="fas fa-backpack"></i>
-                <span>초보자 캠핑 준비물</span>
-            </div>
-            <div class="prompt-card" onclick="sendSuggestedPrompt('가족 캠핑하기 좋은 캠핑장을 추천해주세요')">
-                <i class="fas fa-users"></i>
-                <span>가족 캠핑장 추천</span>
-            </div>
-            <div class="prompt-card" onclick="sendSuggestedPrompt('캠핑에서 만들 수 있는 간단한 요리 레시피를 알려주세요')">
-                <i class="fas fa-utensils"></i>
-                <span>캠핑 요리 레시피</span>
-            </div>
-            <div class="prompt-card" onclick="sendSuggestedPrompt('캠핑 안전 수칙과 주의사항을 알려주세요')">
-                <i class="fas fa-shield-alt"></i>
-                <span>캠핑 안전 수칙</span>
-            </div>
-        </div>
-    `;
-
-    chatMessages.innerHTML = welcomeHTML;
+    chatHistory.forEach(message => {
+        displayMessage(message.content, message.sender === 'user', false);
+    });
 }
 
-// 제안 프롬프트 전송
-function sendSuggestedPrompt(message) {
-    document.getElementById('messageInput').value = message;
-    sendMessage();
+// 로컬 채팅 히스토리 저장
+function saveLocalChatHistory() {
+    if (!currentUser) {
+        localStorage.setItem('campingGPTTempHistory', JSON.stringify(chatHistory));
+    }
 }
 
-// 현재 날짜 시간 문자열 반환
-function getCurrentDateTimeString() {
-    const now = new Date();
-
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0'); // 0-based
-    const day = String(now.getDate()).padStart(2, '0');
-
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+// 로컬 채팅 히스토리 삭제
+function clearLocalChatHistory() {
+    localStorage.removeItem('campingGPTTempHistory');
+    chatHistory = [];
 }
 
 // 메시지 전송
 function sendMessage() {
-    const input = document.getElementById('messageInput');
-    const message = input.value.trim();
-    const savedUser = localStorage.getItem('campingGPTUser');
-    const currentTime = getCurrentDateTimeString(); 
-    
-    if(savedUser == null){
-        sendMessageGuest();
-        return;
-    }
-    
-    // 첫 번째 메시지인 경우에만 새 채팅방 생성
-    let newChatRoomId = null;
-    if (isFirstMessage) {
-        newChatRoomId = createNewChatRoom(message);
-    }
+    const messageInput = document.getElementById('messageInput');
+    const message = messageInput.value.trim();
 
-    // 현재 선택된 채팅방 ID
-    const selectedChatRoomId = getCurrentChatRoomId();
-    
     if (!message) return;
-    
-    let userId = null;
-    try {
-        const parsedUser = JSON.parse(savedUser);
-        userId = parsedUser.id;
-    } catch (e) {
-        console.error("사용자 정보 파싱 실패", e);
-        return;
+
+    // 첫 메시지인 경우 채팅방 생성
+    if (isFirstMessageInChat()) {
+        if (!currentUser) {
+            // 게스트 사용자의 경우 로컬 채팅방 생성
+            currentChatId = 'local_' + Date.now().toString();
+
+            // 첫 메시지로 채팅방 제목 설정
+            const chatTitle = message.length > 30 ? message.substring(0, 30) + '...' : message;
+            updateCurrentChatTitle(chatTitle);
+        } else {
+            // 로그인한 사용자의 경우 새 채팅방 ID 생성
+            currentChatId = 'new_' + Date.now().toString();
+        }
+        setFirstMessageFlag(false);
     }
 
-    // 사용자 메시지 추가
-    addMessage(message, 'user');
+    // 사용자 메시지 표시
+    displayMessage(message, true);
 
-    // 입력 필드 초기화
-    input.value = '';
+    messageInput.value = '';
+    showTypingIndicator();
 
-    // 제안 프롬프트 숨기기
-    const suggestedPrompts = document.querySelector('.suggested-prompts');
-    if (suggestedPrompts) {
-        suggestedPrompts.style.display = 'none';
+    if (currentUser) {
+        // 로그인한 사용자 - 서버에 메시지 전송
+        sendMessageToServer(message);
+    } else {
+        // 게스트 사용자 - 로컬 저장 및 AI 응답
+        saveLocalMessage(message, 'user', currentChatId);
+
+        // AI 응답 시뮬레이션
+        setTimeout(() => {
+            hideTypingIndicator();
+//            const aiResponse = generateAIResponse(message);
+            displayMessage(aiResponse, false);
+            saveLocalMessage(aiResponse, 'ai', currentChatId);
+
+            // 로컬 채팅방 목록 업데이트 및 현재 채팅방 선택 유지
+            renderLocalChatRooms();
+            maintainChatRoomSelection();
+        }, 1500 + Math.random() * 1000);
+    }
+    
+    $.ajax({
+        url: 'http://49.50.131.0:8000/chat',  // Python API 주소
+        type: 'GET',
+        data: { message: message },  
+        success: function(data) {
+            hideTypingIndicator();
+//            if(currentChatId.contain("new_")){
+//            	
+//            }
+            const aiResponse = data.answer;
+            displayMessage(aiResponse, false);
+        },
+        error: function(xhr, status, error) {
+            hideTypingIndicator();
+            console.error('Python API 호출 에러:', error);
+            displayMessage("⚠️ AI 응답 중 오류가 발생했습니다.", false);
+        }
+    });
+
+}
+
+// 채팅방 선택 상태 유지 함수
+function maintainChatRoomSelection() {
+    if (!currentChatId) return;
+
+    // 현재 채팅방을 활성화 상태로 표시
+    const chatItems = document.querySelectorAll('.chat-item');
+    chatItems.forEach(item => {
+        if (item.dataset.chatId === currentChatId) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
+
+    // 선택된 채팅방 제목 업데이트
+    const selectedItem = Array.from(chatItems).find(item => {
+        return item.dataset.chatId === currentChatId;
+    });
+
+    if (selectedItem) {
+        const chatTitle = selectedItem.querySelector('.chat-title').textContent;
+        updateCurrentChatTitle(chatTitle);
+    }
+}
+
+// 제안 프롬프트 전송
+function sendSuggestedPrompt(prompt) {
+    document.getElementById('messageInput').value = prompt;
+    sendMessage();
+}
+
+// 메시지 표시
+function displayMessage(content, isUser, animate = true) {
+    const messagesContainer = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+
+    const currentTime = new Date().toLocaleTimeString('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    messageDiv.innerHTML = `
+        <div class="message-avatar">
+            <i class="fas fa-${isUser ? 'user' : 'robot'}"></i>
+        </div>
+        <div class="message-content">
+            <div class="message-text">${content}</div>
+            <div class="message-time">${currentTime}</div>
+        </div>
+    `;
+
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    if (animate) {
+        messageDiv.style.opacity = '0';
+        messageDiv.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            messageDiv.style.transition = 'all 0.3s ease';
+            messageDiv.style.opacity = '1';
+            messageDiv.style.transform = 'translateY(0)';
+        }, 50);
+    }
+}
+
+// 메시지 저장
+function saveMessage(content, sender) {
+    const message = {
+        content: content,
+        sender: sender,
+        timestamp: new Date().toISOString(),
+        chatId: currentChatId
+    };
+
+    if (currentUser) {
+        // 로그인한 사용자의 경우 서버에 저장
+        saveMessageToServer(message);
+    } else {
+        // 로그인하지 않은 사용자의 경우 로컬 저장
+        chatHistory.push(message);
+        saveLocalChatHistory();
+    }
+}
+
+function getMySQLDatetimeString() {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mi = String(now.getMinutes()).padStart(2, '0');
+    const ss = String(now.getSeconds()).padStart(2, '0');
+
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+}
+
+// 서버에 메시지 전송
+function sendMessageToServer(message) {
+    const currentTime = getMySQLDatetimeString();
+    let selectedChatRoomId = null;
+    let newChatRoomId = null;
+    let isNewChat = false;
+
+    console.log('현재 채팅 ID:', currentChatId);
+
+    // 기존 채팅방인지 새 채팅방인지 구분
+    if (currentChatId && currentChatId.toString().startsWith('new_')) {
+        newChatRoomId = Math.floor(Math.random() * 2147483647);
+        isNewChat = true;
+        console.log('새 채팅방 생성 - newChatRoomId:', newChatRoomId);
+    } else if (currentChatId && !currentChatId.toString().startsWith('local_')) {
+        selectedChatRoomId = parseInt(currentChatId);
+        console.log('기존 채팅방 사용 - selectedChatRoomId:', selectedChatRoomId);
     }
 
     $.ajax({
@@ -117,15 +231,20 @@ function sendMessage() {
         dataType: "JSON",
         data: { 
             message: message,
-            savedUser: userId,
+            savedUser: currentUser,
             currentTime: currentTime,
             selectedChatRoomId: selectedChatRoomId,
             newChatRoomId: newChatRoomId
         },
-        
         success: function (response) {     	
             hideTypingIndicator();
-            alert(response.msg);
+            console.log('메시지 전송 성공:', response.msg);
+
+            // 새 채팅방이 생성된 경우 currentChatId 업데이트
+            if (isNewChat && newChatRoomId) {
+                currentChatId = newChatRoomId.toString();
+                console.log('currentChatId 업데이트:', currentChatId);
+            }
 
             // AI 응답 대기 표시
             showTypingIndicator();
@@ -133,119 +252,142 @@ function sendMessage() {
             // AI 응답 시뮬레이션
             setTimeout(() => {
                 hideTypingIndicator();
-                const aiResponse = generateAIResponse(message);                
-                sendAiMessage(userId, selectedChatRoomId, newChatRoomId, aiResponse)
+//                const aiResponse = generateAIResponse(message);
+                displayMessage(aiResponse, false);
+                
+                // AI 응답 저장 - 업데이트된 currentChatId 사용
+                const finalChatRoomId = isNewChat ? newChatRoomId : selectedChatRoomId;
+                sendAiMessage(currentUser, finalChatRoomId, aiResponse);
             }, 1500 + Math.random() * 1000);
         },
         error: function (xhr, status, error) {
             hideTypingIndicator();
-            alert("실패");
+            console.error('메시지 전송 실패:', error);
+            alert("메시지 전송에 실패했습니다.");
         }
     });
 }
 
-// 게스트 메시지 전송
-function sendMessageGuest() {
-    const input = document.getElementById('messageInput');
-    const message = input.value.trim();
-    
-    // 첫 번째 메시지인 경우에만 새 채팅방 생성
-    let newChatRoomId = null;
-    if (isFirstMessage) {
-        newChatRoomId = createNewChatRoom(message);
-    }
+// AI 메시지 서버에 전송
+function sendAiMessage(userId, finalChatRoomId, aiResponse) {
+    const currentTime = getMySQLDatetimeString();
 
-    // 현재 선택된 채팅방 ID
-    const selectedChatRoomId = getCurrentChatRoomId();
+    console.log('AI 메시지 전송 - finalChatRoomId:', finalChatRoomId);
 
-    if (!message) return;
-
-    // 사용자 메시지 추가
-    addMessage(message, 'user');
-
-    // 입력 필드 초기화
-    input.value = '';
-
-    // 제안 프롬프트 숨기기
-    const suggestedPrompts = document.querySelector('.suggested-prompts');
-    if (suggestedPrompts) {
-        suggestedPrompts.style.display = 'none';
-    }
-
-    // AI 응답 대기 표시
-    showTypingIndicator();
-
-    // AI 응답 시뮬레이션
-    setTimeout(() => {
-        hideTypingIndicator();
-        const aiResponse = generateAIResponse(message);
-        addMessage(aiResponse, 'ai');
-    }, 1500 + Math.random() * 1000);
-}
-
-// AI 메시지 전송
-function sendAiMessage(userId, selectedChatRoomId, newChatRoomId, aiResponse){
-    const currentTime = getCurrentDateTimeString(); 
     $.ajax({
         url: '/ChatHistory/sendAiMessage',
         method: 'POST',
         dataType: "JSON",
         data: { 
-            userId: userId,
-            selectedChatRoomId: selectedChatRoomId,
-            newChatRoomId: newChatRoomId,
-            aiResponse: aiResponse,
-            currentTime: currentTime
+            message: aiResponse,
+            savedUser: userId,
+            currentTime: currentTime,
+            finalChatRoomId: finalChatRoomId
         },
-        
-        success: function (response) {     	
-            alert(response.msg);
-            addMessage(aiResponse, 'ai');
+        success: function (response) {
+            console.log('AI 응답 저장 성공:', response.msg);
+            
+            // 채팅방 목록 새로고침 후 선택 상태 유지
+            loadChatRoomsFromServerWithSelection();
         },
         error: function (xhr, status, error) {
-            hideTypingIndicator();
-            console.error('응답 본문:', xhr.responseText);
-            alert(response.msg);
+            console.error('AI 응답 저장 실패:', error);
         }
     });
 }
 
-// 메시지 추가
-function addMessage(text, sender) {
-    const chatMessages = document.getElementById('chatMessages');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${sender}-message`;
+// 채팅방 목록 로드 후 선택 상태 유지
+function loadChatRoomsFromServerWithSelection() {
+    if (!currentUser) return;
 
-    const avatarIcon = sender === 'ai' ? 'fas fa-robot' : 'fas fa-user';
+    const previousChatId = currentChatId; // 현재 선택된 채팅방 ID 저장
 
-    messageDiv.innerHTML = `
+    $.ajax({
+        url: '/ChatLibrary/getChatRooms',
+        method: 'GET',
+        dataType: "JSON",
+        data: {
+            user_id: currentUser
+        },
+        success: function(data) {
+            if (data.success && data.chatRooms) {
+                chatRooms = data.chatRooms;
+                renderChatRooms();
+
+                // 이전에 선택되었던 채팅방을 다시 선택
+                if (previousChatId) {
+                    currentChatId = previousChatId;
+                    maintainChatRoomSelection();
+                }
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('채팅방 로드 오류:', error);
+        }
+    });
+}
+
+// 채팅 화면 초기화
+function clearChat() {
+    const messagesContainer = document.getElementById('chatMessages');
+    messagesContainer.innerHTML = '';
+}
+
+// 환영 메시지 표시
+function showWelcomeMessage() {
+    const messagesContainer = document.getElementById('chatMessages');
+    const welcomeMessage = document.createElement('div');
+    welcomeMessage.className = 'message ai-message';
+    welcomeMessage.innerHTML = `
         <div class="message-avatar">
-            <i class="${avatarIcon}"></i>
+            <i class="fas fa-robot"></i>
         </div>
         <div class="message-content">
-            <div class="message-text">${text}</div>
-            <div class="message-time">${getCurrentTime()}</div>
+            <div class="message-text">
+                안녕하세요! 저는 캠핑 전문 AI입니다. 🏕️<br>
+                캠핑에 관한 모든 질문에 답해드릴게요. 궁금한 것이 있으시면 언제든 물어보세요!
+            </div>
+            <div class="message-time">방금 전</div>
         </div>
     `;
+    messagesContainer.appendChild(welcomeMessage);
 
-    chatMessages.appendChild(messageDiv);
-    scrollToBottom();
+    // 제안 프롬프트 표시
+    const suggestedPrompts = document.createElement('div');
+    suggestedPrompts.className = 'suggested-prompts';
+    suggestedPrompts.innerHTML = `
+        <div class="prompt-card" onclick="sendSuggestedPrompt('초보자를 위한 캠핑 준비물 리스트를 알려주세요')">
+            <i class="fas fa-backpack"></i>
+            <span>초보자 캠핑 준비물</span>
+        </div>
+        <div class="prompt-card" onclick="sendSuggestedPrompt('가족 캠핑하기 좋은 캠핑장을 추천해주세요')">
+            <i class="fas fa-users"></i>
+            <span>가족 캠핑장 추천</span>
+        </div>
+        <div class="prompt-card" onclick="sendSuggestedPrompt('캠핑에서 만들 수 있는 간단한 요리 레시피를 알려주세요')">
+            <i class="fas fa-utensils"></i>
+            <span>캠핑 요리 레시피</span>
+        </div>
+        <div class="prompt-card" onclick="sendSuggestedPrompt('캠핑 안전 수칙과 주의사항을 알려주세요')">
+            <i class="fas fa-shield-alt"></i>
+            <span>캠핑 안전 수칙</span>
+        </div>
+    `;
+    messagesContainer.appendChild(suggestedPrompts);
 }
 
 // 타이핑 인디케이터 표시
 function showTypingIndicator() {
-    const chatMessages = document.getElementById('chatMessages');
+    const messagesContainer = document.getElementById('chatMessages');
     const typingDiv = document.createElement('div');
-    typingDiv.className = 'message ai-message typing-indicator';
+    typingDiv.className = 'message ai-message';
     typingDiv.id = 'typingIndicator';
-
     typingDiv.innerHTML = `
         <div class="message-avatar">
             <i class="fas fa-robot"></i>
         </div>
         <div class="message-content">
             <div class="typing-indicator">
-                <span>AI가 답변을 작성 중입니다</span>
                 <div class="typing-dots">
                     <span></span>
                     <span></span>
@@ -254,12 +396,11 @@ function showTypingIndicator() {
             </div>
         </div>
     `;
-
-    chatMessages.appendChild(typingDiv);
-    scrollToBottom();
+    messagesContainer.appendChild(typingDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-// 타이핑 인디케이터 숨기기
+// 타이핑 인디케이터 숨김
 function hideTypingIndicator() {
     const typingIndicator = document.getElementById('typingIndicator');
     if (typingIndicator) {
@@ -267,189 +408,131 @@ function hideTypingIndicator() {
     }
 }
 
-// AI 응답 생성
-function generateAIResponse(userMessage) {
-    const responses = {
-        '준비물': `초보자를 위한 캠핑 필수 준비물을 알려드릴게요! 🎒
+// AI 응답 생성 (시뮬레이션)
+//function generateAIResponse(userMessage) {
+//    const responses = {
+//        '준비물': `캠핑 준비물 리스트를 알려드릴게요! 🏕️
+//
+//**필수 준비물:**
+//• 텐트 (인원수에 맞게)
+//• 침낭, 매트리스
+//• 랜턴, 손전등
+//• 취사도구 (버너, 연료, 냄비 등)
+//• 식수, 음식
+//• 응급처치용품
+//• 휴지, 물티슈
+//
+//**편의용품:**
+//• 접이식 테이블, 의자
+//• 쿨러박스
+//• 멀티탭, 충전기
+//• 모기퇴치용품
+//• 여분의 옷
+//
+//더 자세한 정보가 필요하시면 언제든 물어보세요!`,
+//
+//        '캠핑장': `가족 캠핑하기 좋은 캠핑장을 추천해드릴게요! 👨‍👩‍👧‍👦
+//
+//**추천 캠핑장:**
+//
+//**1. 자라섬 캠핑장 (가평)**
+//• 아이들이 뛰어놀 수 있는 넓은 잔디밭
+//• 깨끗한 화장실, 샤워실
+//• 편의점, 마트 접근성 좋음
+//
+//**2. 오토캠핑장 (여주)**
+//• 가족 단위 전용 구획
+//• 전기, 상수도 완비
+//• 안전한 놀이터 시설
+//
+//**3. 청평호반 캠핑장**
+//• 물놀이 가능
+//• 바베큐 시설 완비
+//• 주말 예약 필수
+//
+//각 캠핑장의 특징:
+//• 안전 시설 완비
+//• 편의시설 우수
+//• 가족 친화적 환경
+//
+//더 구체적인 지역이나 조건이 있으시면 알려주세요!`,
+//
+//        '요리': `캠핑에서 만들 수 있는 간단한 요리 레시피를 알려드릴게요! 🍳
+//
+//**초간단 레시피:**
+//
+//**1. 캠핑 라면 🍜**
+//• 재료: 라면, 계란, 햄, 양파
+//• 끓는 물에 야채 먼저 넣고 라면 추가
+//• 계란 풀어서 마지막에 넣기
+//
+//**2. 호일구이 🥘**
+//• 재료: 감자, 고구마, 옥수수, 버터
+//• 호일에 싸서 숯불에 구우면 완성
+//
+//**3. 캠핑 볶음밥 🍚**
+//• 재료: 밥, 계란, 햄, 김치
+//• 버터에서 간단하게 볶아내기
+//
+//**4. 마시멜로우 구이 🍡**
+//• 나무젓가락에 꽂고 숯불에 구워 먹기
+//• 아이들이 특히 좋아해요!
+//
+//**팁:**
+//• 미리 재료를 손질해서 가세요
+//• 일회용 식기 활용하면 설거지 편해요
+//• 쿨러백에 얼음 충분히 준비하세요`,
+//
+//        '안전': `캠핑 안전 수칙과 주의사항을 알려드릴게요! ⚠️
+//
+//**화재 안전:**
+//• 텐트 근처에서 취사금지
+//• 소화기 또는 물 항상 준비
+//• 숯불은 완전히 끈 후 처리
+//• 가스버너 사용 후 밸브 완전히 잠그기
+//
+//**자연재해 대비:**
+//• 천둥번개 시 텐트 내부로 대피
+//• 강풍 시 텐트 고정 재확인
+//• 비 올 때 계곡 근처 피하기
+//
+//**응급상황 대비:**
+//• 응급처치용품 필수 준비
+//• 119, 캠핑장 관리사무소 번호 저장
+//• 약물 복용자는 상비약 지참
+//
+//**야생동물 대비:**
+//• 음식물 밀폐 보관
+//• 쓰레기 정리 철저히
+//• 야생동물 발견 시 거리두기
+//
+//안전한 캠핑을 위해 항상 주의하세요!`
+//    };
+//
+//    // 키워드 매칭으로 응답 선택
+//    for (const [keyword, response] of Object.entries(responses)) {
+//        if (userMessage.includes(keyword)) {
+//            return response;
+//        }
+//    }
+//
+//    // 기본 응답
+//    return `${userMessage}에 대한 질문 감사합니다! 🏕️
+//
+//캠핑에 관한 더 구체적인 질문을 해주시면 더 자세한 답변을 드릴 수 있어요.
+//
+//예를 들어:
+//• 캠핑 준비물에 대해 궁금하시다면 "준비물"
+//• 캠핑장 추천을 원하시면 "캠핑장"
+//• 캠핑 요리가 궁금하시면 "요리"
+//• 안전 수칙을 알고 싶으시면 "안전"
+//
+//언제든 편하게 물어보세요!`;
+//}
 
-**필수 준비물:**
-• 텐트 (인원수에 맞는 크기)
-• 침낭 및 매트리스
-• 랜턴 및 손전등
-• 휴대용 가스버너
-• 식기류 (컵, 그릇, 수저)
-• 응급처치용품
-
-**편의용품:**
-• 의자 및 테이블
-• 쿨러백
-• 타프 (그늘막)
-• 멀티툴
-
-**계절별 추가 준비물:**
-• 여름: 선크림, 모기퇴치제, 부채
-• 겨울: 핫팩, 따뜻한 의류, 방한용품
-
-처음 캠핑이시라면 렌탈 서비스를 이용하시는 것도 좋은 방법이에요!`,
-
-        '캠핑장': `가족 캠핑하기 좋은 캠핑장을 추천해드릴게요! 👨‍👩‍👧‍👦
-
-**서울 근교:**
-• 양평 두물머리 캠핑장 - 깨끗한 시설, 아이 놀이터 완비
-• 가평 자라섬 캠핑장 - 물놀이 가능, 펜션도 함께 운영
-
-**강원도:**
-• 춘천 남이섬 인근 캠핑장 - 관광지 접근성 좋음
-• 홍천 비발디파크 캠핑장 - 다양한 액티비티
-
-**경기도:**
-• 포천 허브아일랜드 글램핑 - 초보자에게 추천
-• 연천 재인폭포 캠핑장 - 자연경관 우수
-
-**선택 시 고려사항:**
-• 화장실, 샤워실 시설
-• 아이들 안전시설
-• 주변 편의점 거리
-• 예약 난이도
-
-더 구체적인 지역이 있으시면 알려주세요!`,
-
-        '요리': `캠핑에서 만들 수 있는 간단한 요리 레시피를 알려드릴게요! 🍳
-
-**초간단 레시피:**
-
-**1. 캠핑 라면 🍜**
-• 재료: 라면, 계란, 햄, 양파
-• 끓는 물에 야채 먼저 넣고 라면 추가
-• 계란 풀어서 마지막에 넣기
-
-**2. 호일구이 🥘**
-• 재료: 감자, 고구마, 옥수수, 버터
-• 호일에 싸서 숯불에 구우면 완성
-
-**3. 캠핑 볶음밥 🍚**
-• 재료: 밥, 계란, 햄, 김치
-• 버너에서 간단하게 볶아내기
-
-**4. 마시멜로우 구이 🍡**
-• 나무젓가락에 꽂고 숯불에 구워 먹기
-• 아이들이 특히 좋아해요!
-
-**팁:**
-• 미리 재료를 손질해서 가세요
-• 일회용 식기 활용하면 설거지 편해요
-• 쿨러백에 얼음 충분히 준비하세요`,
-
-        '안전': `캠핑 안전 수칙과 주의사항을 알려드릴게요! ⚠️
-
-**화재 안전:**
-• 텐트 근처에서 취사금지
-• 소화기 또는 물 항상 준비
-• 숯불은 완전히 끈 후 처리
-• 가스버너 사용 후 밸브 완전히 잠그기
-
-**자연재해 대비:**
-• 천둥번개 시 텐트 내부로 대피
-• 강풍 시 텐트 고정 재확인
-• 비 올 때 계곡 근처 피하기
-
-**응급상황 대비:**
-• 응급처치용품 필수 준비
-• 119, 캠핑장 관리사무소 번호 저장
-• 약물 복용자는 상비약 지참
-
-**야생동물 대처:**
-• 음식물 밀폐용기에 보관
-• 쓰레기 제대로 처리
-• 야생동물 발견 시 거리두기
-
-**일반 안전수칙:**
-• 어둠 속 이동 시 랜턴 사용
-• 아이들 안전사고 주의
-• 음주 후 불 다루기 금지
-
-안전한 캠핑이 즐거운 캠핑이에요! 🏕️`,
-
-        'default': `캠핑에 관한 질문이시군요! 🏕️
-
-더 구체적으로 알려주시면 더 정확한 답변을 드릴 수 있어요.
-
-예를 들어:
-• 어떤 종류의 캠핑을 계획하고 계신가요? (차박, 백패킹, 글램핑 등)
-• 몇 명이서 가시나요?
-• 어느 계절에 가시나요?
-• 어느 지역을 고려하고 계신가요?
-
-이런 정보를 알려주시면 더 맞춤형 조언을 해드릴 수 있습니다! 😊`
-    };
-
-    // 키워드 기반 응답 선택
-    const lowerMessage = userMessage.toLowerCase();
-
-    if (lowerMessage.includes('준비물') || lowerMessage.includes('장비')) {
-        return responses['준비물'];
-    } else if (lowerMessage.includes('캠핑장') || lowerMessage.includes('추천')) {
-        return responses['캠핑장'];
-    } else if (lowerMessage.includes('요리') || lowerMessage.includes('레시피') || lowerMessage.includes('음식')) {
-        return responses['요리'];
-    } else if (lowerMessage.includes('안전') || lowerMessage.includes('주의')) {
-        return responses['안전'];
-    } else {
-        return responses['default'];
-    }
-}
-
-// 현재 시간 반환
-function getCurrentTime() {
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
-}
-
-// 채팅 화면 맨 아래로 스크롤
-function scrollToBottom() {
-    const chatMessages = document.getElementById('chatMessages');
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-// 엔터키 처리
-function handleEnter(event) {
+// 엔터 키 입력 처리
+function handleKeyPress(event) {
     if (event.key === 'Enter') {
         sendMessage();
     }
 }
-
-// 모바일 반응형 처리
-function toggleSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.toggle('open');
-}
-
-// 페이지 새로고침 시 경고
-window.addEventListener('beforeunload', function(e) {
-    if (document.getElementById('messageInput').value.trim()) {
-        e.preventDefault();
-        e.returnValue = '';
-    }
-});
-
-// 모바일에서 사이드바 외부 클릭 시 닫기 및 사용자 메뉴 닫기
-document.addEventListener('click', function(event) {
-    const sidebar = document.querySelector('.sidebar');
-    const userMenu = document.querySelector('.user-menu');
-    const target = event.target;
-
-    // 사이드바 닫기 (모바일)
-    if (window.innerWidth <= 768 && 
-        sidebar.classList.contains('open') && 
-        !sidebar.contains(target)) {
-        sidebar.classList.remove('open');
-    }
-
-    // 사용자 메뉴 닫기
-    if (userMenu && userMenu.classList.contains('open') && 
-        !userMenu.contains(target)) {
-        userMenu.classList.remove('open');
-    }
-});

@@ -13,4 +13,6 @@
 	<select id="selectChatRoomById" parameterType="String" resultType="library">
 		SELECT * FROM user_chat_library WHERE user_id = #{user_id} ORDER BY create_at DESC
 	</select>
+	
+	
 </mapper>
