@@ -77,10 +77,25 @@ function sendMessage() {
 
         // AI 응답 시뮬레이션
         setTimeout(() => {
-            hideTypingIndicator();
-//            const aiResponse = generateAIResponse(message);
-            displayMessage(aiResponse, false);
-            saveLocalMessage(aiResponse, 'ai', currentChatId);
+            $.ajax({
+                url: 'http://49.50.131.0:8000/chat',  // Python API 주소
+                type: 'GET',
+                data: { message: message },  
+                success: function(data) {
+                    hideTypingIndicator();
+                    const aiResponse = data.answer;
+                    displayMessage(aiResponse, false);
+                    saveLocalMessage(aiResponse, 'ai', currentChatId);
+                },
+                error: function(xhr, status, error) {
+                    hideTypingIndicator();
+                    console.error('Python API 호출 에러:', error);
+                    const aiResponse = "⚠️ AI 응답 중 오류가 발생했습니다."
+                    displayMessage(aiResponse, false);
+                    saveLocalMessage(aiResponse, 'ai', currentChatId);
+                }
+            });
+            
 
             // 로컬 채팅방 목록 업데이트 및 현재 채팅방 선택 유지
             renderLocalChatRooms();
@@ -88,24 +103,7 @@ function sendMessage() {
         }, 1500 + Math.random() * 1000);
     }
     
-    $.ajax({
-        url: 'http://49.50.131.0:8000/chat',  // Python API 주소
-        type: 'GET',
-        data: { message: message },  
-        success: function(data) {
-            hideTypingIndicator();
-//            if(currentChatId.contain("new_")){
-//            	
-//            }
-            const aiResponse = data.answer;
-            displayMessage(aiResponse, false);
-        },
-        error: function(xhr, status, error) {
-            hideTypingIndicator();
-            console.error('Python API 호출 에러:', error);
-            displayMessage("⚠️ AI 응답 중 오류가 발생했습니다.", false);
-        }
-    });
+    
 
 }
 
@@ -251,13 +249,33 @@ function sendMessageToServer(message) {
 
             // AI 응답 시뮬레이션
             setTimeout(() => {
-                hideTypingIndicator();
+//                hideTypingIndicator();
 //                const aiResponse = generateAIResponse(message);
-                displayMessage(aiResponse, false);
+                $.ajax({
+                    url: 'http://49.50.131.0:8000/chat',  // Python API 주소
+                    type: 'GET',
+                    data: { message: message },  
+                    success: function(data) {
+                        hideTypingIndicator();
+                        const aiResponse = data.answer;
+                        displayMessage(aiResponse, false);
+                        const finalChatRoomId = isNewChat ? newChatRoomId : selectedChatRoomId;
+                        sendAiMessage(currentUser, finalChatRoomId, aiResponse);
+                    },
+                    error: function(xhr, status, error) {
+                        hideTypingIndicator();
+                        console.error('Python API 호출 에러:', error);
+                        const aiResponse = "⚠️ AI 응답 중 오류가 발생했습니다."
+                        displayMessage(aiResponse, false);
+                        const finalChatRoomId = isNewChat ? newChatRoomId : selectedChatRoomId;
+                        sendAiMessage(currentUser, finalChatRoomId, aiResponse);
+                    }
+                });
+                
+//                displayMessage(aiResponse, false);
                 
                 // AI 응답 저장 - 업데이트된 currentChatId 사용
-                const finalChatRoomId = isNewChat ? newChatRoomId : selectedChatRoomId;
-                sendAiMessage(currentUser, finalChatRoomId, aiResponse);
+                
             }, 1500 + Math.random() * 1000);
         },
         error: function (xhr, status, error) {

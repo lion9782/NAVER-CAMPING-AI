@@ -33,7 +33,7 @@ public class SwaggerConfig {
     public ApiInfo apiInfo() {
         return new ApiInfoBuilder()
                 .title("SAMPLE-API")
-                .description("샘플 API 입니다.")
+                .description("NCLOUD AICAMPING API")
                 .termsOfServiceUrl("coding.toast.co.kr/api/")
                 .version("1.0.0")
                 .build();

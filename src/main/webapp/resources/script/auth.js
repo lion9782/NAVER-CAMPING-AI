@@ -39,7 +39,7 @@ function updateUserInterface() {
                     <i class="fas fa-user"></i>
                 </div>
                 <div class="user-details">
-                    <div class="user-name">${currentUser.name}</div>
+                    <div class="user-name">${currentUser}</div>
                     <div class="user-status">프리미엄</div>
                 </div>
             </div>
@@ -51,7 +51,7 @@ function updateUserInterface() {
         headerUserMenu.innerHTML = `
             <button class="user-menu-btn" onclick="toggleUserMenu()">
                 <i class="fas fa-user-circle"></i>
-                <span>${currentUser.name}</span>
+                <span>${currentUser}</span>
                 <i class="fas fa-chevron-down"></i>
             </button>
             <div class="user-dropdown" id="userDropdown">
@@ -80,8 +80,8 @@ function updateUserInterface() {
                 <div class="guest-details">
                     <div class="guest-name">게스트</div>
                     <div class="guest-actions">
-                        <a href="login.html" class="auth-link">로그인</a>
-                        <a href="signup.html" class="auth-link">회원가입</a>
+                        <a href="/login" class="auth-link">로그인</a>
+                        <a href="/signup" class="auth-link">회원가입</a>
                     </div>
                 </div>
             </div>

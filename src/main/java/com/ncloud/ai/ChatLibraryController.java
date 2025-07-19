@@ -51,9 +51,6 @@ public class ChatLibraryController {
 	    
 	    JSONObject json = new JSONObject();
 	    
-	    System.out.println("selectedChatRoomId : " + selectedChatRoomId);
-	    System.out.println("newChatRoomId : " + newChatRoomId);
-	    
 	    // 새 채팅방 생성 처리
 	    if (newChatRoomId != null && !newChatRoomId.trim().isEmpty()) {
 	        try {

@@ -12,8 +12,6 @@ public class CampingApiController {
     @PostMapping("/AiApi")
     public ResponseEntity<Map<String, String>> askAI(@RequestBody Map<String, String> payload) {
         String userMessage = payload.get("message");
-        System.out.println("111111111111111111111111111");
-        System.out.println("userMessage : " + userMessage);
         // Python API 호출
         String pythonUrl = "http://49.50.131.0:8000/chat";
         RestTemplate restTemplate = new RestTemplate();
@@ -22,7 +20,6 @@ public class CampingApiController {
         Map<String, String> pythonRequest = new HashMap<>();
         
         pythonRequest.put("message", userMessage);
-        System.out.println(pythonRequest.get(pythonRequest));
         try {
             ResponseEntity<Map> pythonResponse = restTemplate.postForEntity(
                 pythonUrl,
@@ -33,7 +30,6 @@ public class CampingApiController {
             // Python 응답 파싱
             String aiResponse = (String) pythonResponse.getBody().get("response");
 
-            System.out.println("aiResponse : " + aiResponse);
             // 클라이언트로 응답 전달
             Map<String, String> result = new HashMap<>();
             result.put("response", aiResponse);

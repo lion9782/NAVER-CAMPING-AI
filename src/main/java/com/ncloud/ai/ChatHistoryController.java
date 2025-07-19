@@ -42,7 +42,6 @@ public class ChatHistoryController {
 		String currentTime = request.getParameter("currentTime");
 				
 		String chatId = "";
-		System.out.println("finalChatRoomId : " + selectedChatRoomId);
 		if(selectedChatRoomId != null) {
 			chatId = selectedChatRoomId;
 		}else if(newChatRoomId != null) {
