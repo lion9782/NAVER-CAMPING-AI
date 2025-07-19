@@ -28,6 +28,8 @@
         <constructor-arg name="sqlSessionFactory" ref="sqlSessionFactory"></constructor-arg>
     </bean>
     
+  
+
 	<!-- 임베디드 H2 DB 설정 -->
 <!--     <jdbc:embedded-database id="dataSource" type="H2"> -->
 <!--         <jdbc:script location="classpath:schema.sql"/> -->

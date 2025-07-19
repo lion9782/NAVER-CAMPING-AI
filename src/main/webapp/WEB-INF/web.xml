@@ -28,6 +28,10 @@
 	<servlet-mapping>
 		<servlet-name>appServlet</servlet-name>
 		<url-pattern>/</url-pattern>
+		<url-pattern>/swagger-resources/configuration/ui</url-pattern>
+	    <url-pattern>/swagger-resources/configuration/security</url-pattern>
+	    <url-pattern>/swagger-resources</url-pattern>
+	    <url-pattern>/v2/api-docs</url-pattern>
 	</servlet-mapping>
 	
 	<servlet>
@@ -44,5 +48,7 @@
 	    <servlet-name>h2-console</servlet-name>
 	    <url-pattern>/h2-console/*</url-pattern>
 	</servlet-mapping>
+
+	
 
 </web-app>
