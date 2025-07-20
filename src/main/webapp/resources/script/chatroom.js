@@ -214,6 +214,7 @@ function loadChatMessages(roomId) {
         },
         success: function(data) {
             if (data.success && data.messages && data.messages.length > 0) {
+            	
                 clearChat();
                 showWelcomeMessage();
 
@@ -221,12 +222,12 @@ function loadChatMessages(roomId) {
                 data.messages.forEach(messageData => {
                     // 사용자 질문 표시
                     if (messageData.question_value) {
-                        displayMessage(messageData.question_value, true, false);
+                        displayMessage(messageData.question_value, true, false, messageData.question_create_at);
                     }
 
                     // AI 답변 표시
                     if (messageData.answer_value) {
-                        displayMessage(messageData.answer_value, false, false);
+                        displayMessage(messageData.answer_value, false, false, messageData.answer_create_at);
                     }
                 });
             } else {

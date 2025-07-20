@@ -11,13 +11,17 @@
 	
 	<!-- ai응답 update -->	
 	<update id="updateAimessage" parameterType="history">
-	    UPDATE user_chat_history 
-	    	SET 
-	    	answer_value = #{answer_value}
-	    	, answer_create_at = #{answer_create_at}
-	    WHERE 
-	    	user_id = #{user_id} 
-	    	AND user_chat_library_id = #{user_chat_library_id}
+	    UPDATE user_chat_history A
+			JOIN (
+			    SELECT MAX(`order`) AS max_order
+				    FROM user_chat_history
+			    WHERE user_id = #{user_id} AND user_chat_library_id = #{user_chat_library_id}
+			) AS B ON A.`order` = B.max_order
+				  AND A.user_id = #{user_id}
+				  AND A.user_chat_library_id = #{user_chat_library_id}
+			SET 
+			    A.answer_value = #{answer_value},
+			    A.answer_create_at = #{answer_create_at}
 	</update>
 	
 	<select id="getChatMessagesByRoomId" parameterType="int" resultType="history">

@@ -2,6 +2,18 @@
 // 채팅 관련 전역 변수
 let chatHistory = [];
 
+function getMySQLDatetimeString() {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mi = String(now.getMinutes()).padStart(2, '0');
+    const ss = String(now.getSeconds()).padStart(2, '0');
+
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+}
+
 // 로컬 채팅 히스토리 로드 (로그인하지 않은 사용자)
 function loadLocalChatHistory() {
     const savedHistory = localStorage.getItem('campingGPTTempHistory');
@@ -63,7 +75,7 @@ function sendMessage() {
     }
 
     // 사용자 메시지 표시
-    displayMessage(message, true);
+    displayMessage(message, true, true, getMySQLDatetimeString());
 
     messageInput.value = '';
     showTypingIndicator();
@@ -84,14 +96,14 @@ function sendMessage() {
                 success: function(data) {
                     hideTypingIndicator();
                     const aiResponse = data.answer;
-                    displayMessage(aiResponse, false);
+                    displayMessage(aiResponse, false, true, getMySQLDatetimeString());
                     saveLocalMessage(aiResponse, 'ai', currentChatId);
                 },
                 error: function(xhr, status, error) {
                     hideTypingIndicator();
                     console.error('Python API 호출 에러:', error);
                     const aiResponse = "⚠️ AI 응답 중 오류가 발생했습니다."
-                    displayMessage(aiResponse, false);
+                    displayMessage(aiResponse, false, true, getMySQLDatetimeString());
                     saveLocalMessage(aiResponse, 'ai', currentChatId);
                 }
             });
@@ -139,15 +151,15 @@ function sendSuggestedPrompt(prompt) {
 }
 
 // 메시지 표시
-function displayMessage(content, isUser, animate = true) {
+function displayMessage(content, isUser, animate = true, currentTime) {
     const messagesContainer = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
 
-    const currentTime = new Date().toLocaleTimeString('ko-KR', {
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+//    const currentTime = new Date().toLocaleTimeString('ko-KR', {
+//        hour: '2-digit',
+//        minute: '2-digit'
+//    });
 
     messageDiv.innerHTML = `
         <div class="message-avatar">
@@ -192,17 +204,7 @@ function saveMessage(content, sender) {
     }
 }
 
-function getMySQLDatetimeString() {
-    const now = new Date();
-    const yyyy = now.getFullYear();
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const dd = String(now.getDate()).padStart(2, '0');
-    const hh = String(now.getHours()).padStart(2, '0');
-    const mi = String(now.getMinutes()).padStart(2, '0');
-    const ss = String(now.getSeconds()).padStart(2, '0');
 
-    return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
-}
 
 // 서버에 메시지 전송
 function sendMessageToServer(message) {
@@ -258,7 +260,7 @@ function sendMessageToServer(message) {
                     success: function(data) {
                         hideTypingIndicator();
                         const aiResponse = data.answer;
-                        displayMessage(aiResponse, false);
+                        displayMessage(aiResponse, false, true, getMySQLDatetimeString());
                         const finalChatRoomId = isNewChat ? newChatRoomId : selectedChatRoomId;
                         sendAiMessage(currentUser, finalChatRoomId, aiResponse);
                     },
@@ -266,7 +268,7 @@ function sendMessageToServer(message) {
                         hideTypingIndicator();
                         console.error('Python API 호출 에러:', error);
                         const aiResponse = "⚠️ AI 응답 중 오류가 발생했습니다."
-                        displayMessage(aiResponse, false);
+                        displayMessage(aiResponse, false, true, getMySQLDatetimeString());
                         const finalChatRoomId = isNewChat ? newChatRoomId : selectedChatRoomId;
                         sendAiMessage(currentUser, finalChatRoomId, aiResponse);
                     }

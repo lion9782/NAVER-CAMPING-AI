@@ -31,7 +31,6 @@ public class LoginController {
 		String user_email = request.getParameter("email");
 		String user_pwd = request.getParameter("password");
 
-		System.out.println("user_email : " + user_email);
 		vo.setEmail(user_email);
 		vo.setPassword(user_pwd);
 		String[] mobStr = user_email.split("@");
@@ -39,7 +38,6 @@ public class LoginController {
 		
 		int result = service.checkUser(vo);
 		
-		System.out.println("result" + result);
 		JSONObject json = new JSONObject();
 		if(result == 1) {
 			json.put("user", user);		
