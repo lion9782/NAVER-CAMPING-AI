@@ -43,8 +43,11 @@ AICAMPING은 사용자가 AI에게 자연어로 캠핑 관련 질문을 던지�
 
 ## 📦 프로젝트 구조 (Structure)
 📁 src/
+
 ┣ 📁 main/
+
 ┃ ┣ 📁 java/
+
 ┃ ┃ ┣ 📁 com.ncloud.ai/          # 컨트롤러 (Chat, Home, Login 등)
 ┃ ┃ ┣ 📁 com.ncloud.common/      # 공통 유틸리티 (Json 핸들링 등)
 ┃ ┃ ┣ 📁 com.ncloud.dao/         # DAO 및 DAOImpl 클래스
