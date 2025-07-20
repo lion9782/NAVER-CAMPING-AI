@@ -53,12 +53,6 @@ AICAMPING은 사용자가 AI에게 자연어로 캠핑 관련 질문을 던지�
 ┃ ┃ ┗ 📁 com.ncloud.service/     # 서비스 및 서비스 구현체
 ┃ ┣ 📁 resources/
 ┃ ┃ ┣ 📁 mappers/                # MyBatis 매퍼 XML
-┃ ┃ ┣ 📄 application.properties
-┃ ┃ ┣ 📄 mybatis-config.xml
-┃ ┃ ┣ 📄 schema.sql
-┃ ┃ ┣ 📄 data.sql
-┃ ┃ ┣ 📄 log4j.xml
-┃ ┃ ┗ 📄 log4jdbc.log4j2.properties
 ┃ ┗ 📁 webapp/
 ┃   ┣ 📁 download/               # APK 파일
 ┃   ┣ 📁 resources/
@@ -68,6 +62,7 @@ AICAMPING은 사용자가 AI에게 자연어로 캠핑 관련 질문을 던지�
 ┃     ┣ 📁 spring/              # Spring 설정 XML
 ┃     ┗ 📁 views/               # JSP 페이지 (chat, login, signup 등)
 ┗ 📁 test/                      # 테스트 코드
+
 
 ## 📌 기타 사항
 
