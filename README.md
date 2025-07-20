@@ -49,21 +49,37 @@ AICAMPING은 사용자가 AI에게 자연어로 캠핑 관련 질문을 던지�
 ┃ ┣ 📁 java/
 
 ┃ ┃ ┣ 📁 com.ncloud.ai/          # 컨트롤러 (Chat, Home, Login 등)
+
 ┃ ┃ ┣ 📁 com.ncloud.common/      # 공통 유틸리티 (Json 핸들링 등)
+
 ┃ ┃ ┣ 📁 com.ncloud.dao/         # DAO 및 DAOImpl 클래스
+
 ┃ ┃ ┣ 📁 com.ncloud.domain/      # VO (Value Object)
+
 ┃ ┃ ┣ 📁 com.ncloud.openfeign/   # 외부 API 호출용 FeignClient
+
 ┃ ┃ ┗ 📁 com.ncloud.service/     # 서비스 및 서비스 구현체
+
 ┃ ┣ 📁 resources/
+
 ┃ ┃ ┣ 📁 mappers/                # MyBatis 매퍼 XML
+
 ┃ ┗ 📁 webapp/
+
 ┃   ┣ 📁 download/               # APK 파일
+
 ┃   ┣ 📁 resources/
+
 ┃   ┃ ┣ 📁 css/
+
 ┃   ┃ ┗ 📁 script/               # JavaScript (chat, main 등)
+
 ┃   ┗ 📁 WEB-INF/
+
 ┃     ┣ 📁 spring/              # Spring 설정 XML
+
 ┃     ┗ 📁 views/               # JSP 페이지 (chat, login, signup 등)
+
 ┗ 📁 test/                      # 테스트 코드
 
 
