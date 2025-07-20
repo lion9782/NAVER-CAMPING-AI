@@ -42,7 +42,6 @@ AICAMPING은 사용자가 AI에게 자연어로 캠핑 관련 질문을 던지�
 * 회원가입 및 로그인 후 챗봇과의 대화가 자동으로 저장되며, 마이페이지에서 이전 대화를 확인할 수 있습니다.
 
 ## 📦 프로젝트 구조 (Structure)
-
 📁 src/
  ┣ 📁 main/
  ┃ ┣ 📁 java/
@@ -54,10 +53,12 @@ AICAMPING은 사용자가 AI에게 자연어로 캠핑 관련 질문을 던지�
  ┃ ┃ ┗ 📁 com.ncloud.service/     # 서비스 및 서비스 구현체
  ┃ ┣ 📁 resources/
  ┃ ┃ ┣ 📁 mappers/                # MyBatis 매퍼 XML
- ┃ ┃ ┣ application.properties
- ┃ ┃ ┣ mybatis-config.xml
- ┃ ┃ ┣ schema.sql / data.sql
- ┃ ┃ ┗ log4j 설정 파일들
+ ┃ ┃ ┣ 📄 application.properties
+ ┃ ┃ ┣ 📄 mybatis-config.xml
+ ┃ ┃ ┣ 📄 schema.sql
+ ┃ ┃ ┣ 📄 data.sql
+ ┃ ┃ ┣ 📄 log4j.xml
+ ┃ ┃ ┗ 📄 log4jdbc.log4j2.properties
  ┃ ┗ 📁 webapp/
  ┃   ┣ 📁 download/               # APK 파일
  ┃   ┣ 📁 resources/
