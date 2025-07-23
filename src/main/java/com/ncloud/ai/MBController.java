@@ -37,7 +37,7 @@ public class MBController {
 		 * String[] mobStr = user_email.split("@"); String user_id = mobStr[0];
 		 */
 		 
-		/* System.out.println("À¯Àú¾ÆÀÌµğÁ»º¸ÀÚ" + user_id +"¶ç¾î¾²±â"+ user_name); */
+		/* System.out.println("ìœ ì €ì•„ì´ë””ì¢€ë³´ì" + user_id +"ë„ì–´ì“°ê¸°"+ user_name); */
 		 
 		 vo.setUser_id(user_id);
 		 vo.setName(user_name);
@@ -60,7 +60,7 @@ vo.setCreate_at(create_at); vo.setUpdate_at(update_at);*/
 	JSONObject json = new JSONObject();
 	if(result == 1) {
 		json.put("user", result);		
-		json.put("sucess", "¼º°ø¤¤");		
+		json.put("sucess", "sucess");		
 	}else {
 		json.put("fail", "fail");
 	}
